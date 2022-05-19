@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+#personal stuff
+deploy.sh
+utilities/edhmaker_data/*
+current_ideas.txt
+utilities/games_list_utils.py
