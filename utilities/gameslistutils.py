@@ -5,13 +5,18 @@ import urllib
 import time
 from discord.ext.commands import Bot
 
+# A small class to list the games in one of my directories and spit out fast URLS for them.
+# This is spammy so only administrators of a discord server can call this.
 class GamesListUtils(commands.Cog):
     def __init__(self, bot):
         super().__init__()
         self.bot = bot
 
     game_directory_location = os.getenv('GAMES_DIR')
-    
+   
+
+    # generates a list of the games in GAMES_DIR and spits out their GAMES_URL+extension
+    # so people can download the games easier 
     def generate_games_list(self):
         base_url=os.getenv('GAMES_URL')
     
@@ -34,7 +39,7 @@ class GamesListUtils(commands.Cog):
     
         return response_list 
 
-        
+    # Lists all games in a directory and spits out their corresponding urls. 
     @commands.command(hidden=True)
     async def listgames(self, ctx):
         if ctx.author.guild_permissions.administrator == False:
