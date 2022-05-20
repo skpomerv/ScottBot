@@ -4,7 +4,7 @@ from discord.ext import commands
 from discord.ext.commands import Bot
 from random import sample
 from random import randint
-
+from thefuzz import process
 
 class EDHMaker(commands.Cog):
 
@@ -105,7 +105,6 @@ class EDHMaker(commands.Cog):
             # If it's a legendary creature, it can be a commander
             if (('supertypes' in val[0]) & ('types' in val[0])): # I don't trust python short circuiting
                 if (('Legendary' in val[0]['supertypes']) & ('Creature' in val[0]['types'])):
-                    #print("Adding: {}".format(key))
                     myDict[key] = val 
                     notAdded = False
             # If the card is not a legendary creature, it may still be a commander if the rules text says so
@@ -203,23 +202,23 @@ class EDHMaker(commands.Cog):
         return sample(cardList, cardCount)
         
 
-        # Generates a (probably) terrible EDH deck
-        # At the moment there are no color restriction options
-        # Returns a map that maps keys (cardnames) to a small dict of ['isCMDR', and 'count']
-    def makeDeck(self):
-        #initial vars
+    # Generates a (probably) terrible EDH deck
+    # At the moment there are no color restriction options
+    # Returns a map that maps keys (cardnames) to a small dict of ['isCMDR', and 'count']
+    def makeDeck(self, cmdrList=[]):
         colorToLand = { "W":"Plains", "B":"Swamp", "U":"Island", "G":"Forest", "R":"Mountain" }
-        cmdrList = []
         deckList = []
 
         landCount = randint(33,42)
         basicLandCount = int(landCount * .66)
         nonlandCount = 100-landCount
 
-        # get commander
-        cmdrList = self.getXRandomCardsFromDict([], [], 1, 'commander')
-        if self.isPartner(cmdrList[0]):
-            cmdrList.append(self.getXRandomCardsFromDict([], [], 1, 'partner')[0])
+
+        if len(cmdrList) == 0:
+            # get commander
+            cmdrList = self.getXRandomCardsFromDict([], [], 1, 'commander')
+            if self.isPartner(cmdrList[0]):
+                cmdrList.append(self.getXRandomCardsFromDict([], [], 1, 'partner')[0])
 
         # Find out the colors I am using and the colors I'm not.
         legalColors, illegalColors = self.getColors(cmdrList)
@@ -279,8 +278,52 @@ class EDHMaker(commands.Cog):
         return myString
 
 
-    @commands.command(brief='Generates an EDH deck', description='Makes a random EDH deck that is probably not good. Note double faced cards (which use "//" may need to be hand modified to be supported by whatever you shove this into.')
+    #Takes a commander name and returns the dictionary entry of the best match.
+    def findBestCMDRMatch(self, cmdrname):
+        return process.extractOne(cmdrname,self.getCommanderDict().keys())
+
+    @commands.command(brief='Generates an EDH deck. Do "!edh help" for more info.', description='Makes a random EDH deck that is probably not good. Note double faced cards (which use "//" may need to be hand modified to be supported by whatever you shove this into. For further help type "!edh help"')
     async def edh(self, ctx, *args):
-        myString = self.dictToString(self.makeDeck())
-        await ctx.send("Here's your deck!\n```" + myString + "```")
+
+        # If no arguments, make an edh deck using whatever.
+        if len(args) == 0:
+            myString = self.dictToString(self.makeDeck())
+            await ctx.send("Here's your deck!\n```" + myString + "```")
+            return
+
+        # Help options
+        elif args[0].lower() == "help":
+            myString =  """ Here is what I have so far:
+`!edh` - generates a random deck with a random commander and random colors.
+`!edh commander "Kozilek, the Great Distortion"` - generates a deck with Kozilek, the Great Distortion as the commander. The quotes are necessary.
+`!edh commander "Fblthp, the Lost" "Norin, the Wary"` - generates a deck with Fblthp and Norin as though they had partner. The quotes are necessary.
+`!edh colors red white blue` - generates a deck with a single commander that has the color identity of red, white, and blue. Partners aren't supported. (CURRENTLY UNIMPLEMENTED)
+                        """
+            await ctx.send(myString)
+            return
+
+        # if arg[0] is "commander" then args[1] (and potentially args[2]) are commanders
+        elif (args[0].lower() == "commander") or (args[0].lower() == "commanders"):         
+            if len(args) < 2:
+                await ctx.send("No commander specified. Either call this with a commander or do not add the commander arg.")
+                return
+            
+            potential_cmdr_list = [] 
+            potential_cmdr_list.append(self.findBestCMDRMatch(args[1])[0])
+            if len(args) > 2:
+                potential_cmdr_list.append(self.findBestCMDRMatch(args[2])[0]) 
+                
+            myString = self.dictToString(self.makeDeck(cmdrList=potential_cmdr_list))
+            await ctx.send("Here's your deck with commander(s) {}:\n```{}```".format(potential_cmdr_list, myString))
+            return
+        elif (args[0].lower() == "color") or (args[0].lower() == "colors"):
+            await ctx.send("Color support is currently under development. As in, I havent started it really. Ssh. We'll get there.")
+            return
+        else:
+            await ctx.send("I'm not sure what you want? Make sure after !edh you type the type of restriction you're giving. Check with !edh help for current options.")
+            return
+
+
+
+
 
