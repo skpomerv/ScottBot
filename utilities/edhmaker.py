@@ -219,7 +219,7 @@ class EDHMaker(commands.Cog):
         # get commander
         cmdrList = self.getXRandomCardsFromDict([], [], 1, 'commander')
         if self.isPartner(cmdrList[0]):
-            cmdrList.append(newDeck.getXRandomCardsFromDict([], [], 1, 'partner')[0])
+            cmdrList.append(self.getXRandomCardsFromDict([], [], 1, 'partner')[0])
 
         # Find out the colors I am using and the colors I'm not.
         legalColors, illegalColors = self.getColors(cmdrList)
