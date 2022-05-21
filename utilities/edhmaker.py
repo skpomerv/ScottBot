@@ -1,7 +1,9 @@
-import json
 import discord
 from discord.ext import commands
 from discord.ext.commands import Bot
+
+import json 
+#import collections
 from random import sample
 from random import randint
 from thefuzz import process
@@ -128,7 +130,7 @@ class EDHMaker(commands.Cog):
         for key, val in cardDict.items():
             # If the card is not a legendary creature, it may still be a commander if the rules text says so
             if ('text' in val[0]):
-                if (("Partner" in val[0]['text']) | ( "Friends Forever" in val[0]['text'] ) ):
+                if (("Partner" in val[0]['text']) | ( "Friends forever" in val[0]['text'] ) ):
                     myDict[key] = val 
 
         f = open(self.partner_json, "w")
@@ -282,6 +284,49 @@ class EDHMaker(commands.Cog):
     def findBestCMDRMatch(self, cmdrname):
         return process.extractOne(cmdrname,self.getCommanderDict().keys())
 
+    # grabs all commanders of a given color identity then returns an commander or set
+    # of commanders.
+    def getCMDROnColor(self, color_identity):
+        #in this we make a list of list entries. It's a bit wonky but makes life easier
+        legalCmdrs = []
+        allCmdrs = self.getCommanderDict()
+        allPartners = self.getPartnerDict()
+        # remove ordering for comparisons against commanders,
+        # duplicates don't matter
+        cidset = set(color_identity)
+
+        # It's a bit naive but I'm just gonna assemble all legal commander combos and pick one
+        for k, v in allCmdrs.items():
+            if cidset == set(v[0]['colorIdentity']):
+                legalCmdrs.append([k]) # k is a list here so we can support pairs of commanders.
+
+        # slow, but all partner combos here are pretty small.
+        for k,v in allPartners.items():
+            if set(v[0]['colorIdentity']).issubset(cidset): 
+                
+                partner1 = k
+                p2mincolors = set(cidset).difference(v[0]['colorIdentity'])
+
+                for k2, v2 in allPartners.items():
+                    # if we aren't looking at ourselves and
+                    # partner 2's color identity is a superset of the minimum colors and
+                    # partner 2's color identity is a subset of the total colors and
+                    # we have not put a reverse ordering in the list already
+                    if (k != k2) and (p2mincolors.issubset(set(v2[0]['colorIdentity']))) and (cidset.issuperset(set(v2[0]['colorIdentity']))) and ([k2, k] not in legalCmdrs):
+                        legalCmdrs.append([k, k2])
+        return sample(legalCmdrs, 1)[0]
+                            
+
+    # Looks at entries in Tuple t and returns a list containing each word.
+    def tupleToColorID(self, t):
+        cid = []
+        colorConverter = { "white":"W", "black":"B", "blue":"U", "green":"G", "red":"R",
+                           "w":"W", "b":"B", "g":"G", "u":"U", "r":"R"  }
+        for k,v in colorConverter.items():
+            if k.lower() in (color.lower() for color in t):
+                cid.append(v)
+        return cid
+
     @commands.command(brief='Generates an EDH deck. Do "!edh help" for more info.', description='Makes a random EDH deck that is probably not good. Note double faced cards (which use "//" may need to be hand modified to be supported by whatever you shove this into. For further help type "!edh help"')
     async def edh(self, ctx, *args):
 
@@ -297,7 +342,8 @@ class EDHMaker(commands.Cog):
 `!edh` - generates a random deck with a random commander and random colors.
 `!edh commander "Kozilek, the Great Distortion"` - generates a deck with Kozilek, the Great Distortion as the commander. The quotes are necessary.
 `!edh commander "Fblthp, the Lost" "Norin, the Wary"` - generates a deck with Fblthp and Norin as though they had partner. The quotes are necessary.
-`!edh colors red white blue` - generates a deck with a single commander that has the color identity of red, white, and blue. Partners aren't supported. (CURRENTLY UNIMPLEMENTED)
+`!edh colors red white blue` - generates a deck with a commander or pair of commanders that has the color identity of red, white, and blue.
+`!edh colors none` - generates a colorless edh deck.
                         """
             await ctx.send(myString)
             return
@@ -316,8 +362,11 @@ class EDHMaker(commands.Cog):
             myString = self.dictToString(self.makeDeck(cmdrList=potential_cmdr_list))
             await ctx.send("Here's your deck with commander(s) {}:\n```{}```".format(potential_cmdr_list, myString))
             return
-        elif (args[0].lower() == "color") or (args[0].lower() == "colors"):
-            await ctx.send("Color support is currently under development. As in, I havent started it really. Ssh. We'll get there.")
+        elif (args[0].lower() == "color") or (args[0].lower() == "colors"): 
+
+            potential_cmdr_list = self.getCMDROnColor(self.tupleToColorID(args)) 
+            myString = self.dictToString(self.makeDeck(cmdrList=potential_cmdr_list))
+            await ctx.send("Here's your deck with color selection {}:\n```{}```".format(self.tupleToColorID(args), myString))
             return
         else:
             await ctx.send("I'm not sure what you want? Make sure after !edh you type the type of restriction you're giving. Check with !edh help for current options.")
