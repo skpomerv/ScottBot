@@ -72,6 +72,8 @@ class EDHMaker(commands.Cog):
             if (('legalities' in val[0]) and ('types' in val[0])):
                 if (('commander' in val[0]["legalities"]) & ('Land' not in val[0]['types'])) :
                     if (val[0]["legalities"]["commander"] != "Banned"):
+                        if ('text' in val[0]) and ("draft" in val[0]['text']):
+                            continue
                         myDict[key] = val
 
         f = open(self.legal_json, "w")
@@ -88,6 +90,8 @@ class EDHMaker(commands.Cog):
             if (('legalities' in val[0]) and ('types' in val[0])):
                 if (('commander' in val[0]["legalities"]) & ('Land' in val[0]['types'])) :
                     if (val[0]["legalities"]["commander"] != "Banned"):
+                        if ('text' in val[0]) and ("draft" in val[0]['text']):
+                            continue
                         myDict[key] = val
 
         f = open(self.land_json, "w")
@@ -107,6 +111,8 @@ class EDHMaker(commands.Cog):
             # If it's a legendary creature, it can be a commander
             if (('supertypes' in val[0]) & ('types' in val[0])): # I don't trust python short circuiting
                 if (('Legendary' in val[0]['supertypes']) & ('Creature' in val[0]['types'])):
+                    if ('text' in val[0]) and ("draft" in val[0]['text']): #okay maybe I do
+                        continue
                     myDict[key] = val 
                     notAdded = False
             # If the card is not a legendary creature, it may still be a commander if the rules text says so
@@ -130,7 +136,7 @@ class EDHMaker(commands.Cog):
         for key, val in cardDict.items():
             # If the card is not a legendary creature, it may still be a commander if the rules text says so
             if ('text' in val[0]):
-                if (("Partner" in val[0]['text']) | ( "Friends forever" in val[0]['text'] ) ):
+                if (("partner" in val[0]['text']) | ( "friends forever" in val[0]['text']) ):
                     myDict[key] = val 
 
         f = open(self.partner_json, "w")
@@ -211,16 +217,16 @@ class EDHMaker(commands.Cog):
         colorToLand = { "W":"Plains", "B":"Swamp", "U":"Island", "G":"Forest", "R":"Mountain" }
         deckList = []
 
-        landCount = randint(33,42)
-        basicLandCount = int(landCount * .66)
-        nonlandCount = 100-landCount
-
-
+        # get a commander if we don't have one yet
         if len(cmdrList) == 0:
             # get commander
             cmdrList = self.getXRandomCardsFromDict([], [], 1, 'commander')
             if self.isPartner(cmdrList[0]):
                 cmdrList.append(self.getXRandomCardsFromDict([], [], 1, 'partner')[0])
+
+        landCount = randint(33,42)
+        basicLandCount = int(landCount * .66)
+        nonlandCount = 100-len(cmdrList)-landCount
 
         # Find out the colors I am using and the colors I'm not.
         legalColors, illegalColors = self.getColors(cmdrList)
@@ -239,12 +245,19 @@ class EDHMaker(commands.Cog):
             basicMul = int( basicLandCount / len(legalColors) ) 
             basicTypes = len(legalColors)
 
-        # Re-computing the nonbasic land count as basicMul * basics probably has a remainder.
-        nonBasicLandCount = landCount - (basicMul * basicTypes) 
+        # Computing the nonbasic land count as basicMul * basics probably has a remainder.
+        nonBasicLandCount = landCount - (basicMul * basicTypes)
+
+        # Sanity check
+#        print("Computation:   NBLC: {}\n   BasicMul: {}\n   BasicTypes: {}\n   nonLandCount: {}\n   Len_CMDR: {}\n".format( nonBasicLandCount, basicMul, basicTypes, nonlandCount, len(cmdrList)))
+#        if (nonBasicLandCount + (basicMul*basicTypes) + len(cmdrList) + nonlandCount) != 100:
+#            print("Calculation is sus!?\n   Total: {}\n".format(nonBasicLandCount + (basicMul*basicTypes) + len(cmdrList) + nonlandCount))
 
         # omit illegal colors, ban previously added cards from being readded, add nonlandcount cards (minus number of commanders)
-        deckList = deckList + self.getXRandomCardsFromDict(illegalColors, cmdrList, nonlandCount-len(cmdrList), 'nonland')
-        deckList = deckList + self.getXRandomCardsFromDict(illegalColors, cmdrList+deckList, int(nonBasicLandCount), 'land')
+        nonLandList = self.getXRandomCardsFromDict(illegalColors, cmdrList, nonlandCount, 'nonland')
+        nbLandList = self.getXRandomCardsFromDict(illegalColors, cmdrList+nonLandList, int(nonBasicLandCount), 'land')
+
+        deckList = deckList + nonLandList + nbLandList
 
         # For the sake of ease I'm going to actually make this a dict with an inner dict of "isCMDR" and "count"
         # for the value. I should have make the lists a dict from the get-go but I forgot I could have
@@ -264,6 +277,15 @@ class EDHMaker(commands.Cog):
             finalDict["Wastes"] = { "isCMDR":False, "count":basicMul }
         for color in legalColors:
             finalDict[colorToLand[color]] = { "isCMDR":False, "count":basicMul }
+
+
+#        dsum = 0
+#        for _, v in finalDict.items():
+#            #print("adding v={} to dsum\n".format(v['count']))
+#            dsum = dsum + v['count']
+#
+#        if dsum != 100:
+#            print("Card Sum is not 100!? D_SUM={}\n\n{}\n\n".format(dsum, finalDict))
 
         return finalDict
 
