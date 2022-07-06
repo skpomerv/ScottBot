@@ -3,8 +3,10 @@ from discord.ext import commands
 from discord.ext.commands import Bot
 
 import json 
+import re
 #import collections
 from random import sample
+from random import choice
 from random import randint
 from thefuzz import process
 
@@ -207,8 +209,7 @@ class EDHMaker(commands.Cog):
 
         # Grab n cards from the list
         # Unlike random.choices, sample grabs without relacement so there arent duplicate choices.
-        return sample(cardList, cardCount)
-        
+        return sample(cardList, cardCount) 
 
     # Generates a (probably) terrible EDH deck
     # At the moment there are no color restriction options
@@ -248,10 +249,6 @@ class EDHMaker(commands.Cog):
         # Computing the nonbasic land count as basicMul * basics probably has a remainder.
         nonBasicLandCount = landCount - (basicMul * basicTypes)
 
-        # Sanity check
-#        print("Computation:   NBLC: {}\n   BasicMul: {}\n   BasicTypes: {}\n   nonLandCount: {}\n   Len_CMDR: {}\n".format( nonBasicLandCount, basicMul, basicTypes, nonlandCount, len(cmdrList)))
-#        if (nonBasicLandCount + (basicMul*basicTypes) + len(cmdrList) + nonlandCount) != 100:
-#            print("Calculation is sus!?\n   Total: {}\n".format(nonBasicLandCount + (basicMul*basicTypes) + len(cmdrList) + nonlandCount))
 
         # omit illegal colors, ban previously added cards from being readded, add nonlandcount cards (minus number of commanders)
         nonLandList = self.getXRandomCardsFromDict(illegalColors, cmdrList, nonlandCount, 'nonland')
@@ -279,16 +276,7 @@ class EDHMaker(commands.Cog):
             finalDict[colorToLand[color]] = { "isCMDR":False, "count":basicMul }
 
 
-#        dsum = 0
-#        for _, v in finalDict.items():
-#            #print("adding v={} to dsum\n".format(v['count']))
-#            dsum = dsum + v['count']
-#
-#        if dsum != 100:
-#            print("Card Sum is not 100!? D_SUM={}\n\n{}\n\n".format(dsum, finalDict))
-
         return finalDict
-
 
 
     # Converts the deck arg into a string that looks pretty to humans
@@ -349,6 +337,208 @@ class EDHMaker(commands.Cog):
                 cid.append(v)
         return cid
 
+
+
+    ### Begin Random Card Shit ###
+
+    # Creates a easier-to-work-with mana dict. explicitColorless indicates whether the mana provided MUST be colorless. I.E. is the mana provided by a player or a cost for a card.
+    def convertManaToDict(self, manaCost, explicitColorless=True):
+        manaDict = { } #initialize colorless since it's not initialized.
+        
+        if explicitColorless:
+            manaDict['c'] = 0
+        else:
+            manaDict['colorless'] = 0
+
+        tokens = re.findall("{(.*?)}", manaCost) #.* is not super fast, but it's good enough for this
+
+        td = self.getLegalDict()
+
+        #tokenize string
+        #print("Tokenized String: {}".format(tokens))
+
+        for t in tokens:
+            if t.isnumeric():
+                if explicitColorless:
+                    manaDict['c'] = manaDict['c'] + int(t)
+                else:
+                    manaDict['colorless'] = manaDict['colorless'] + int(t)
+                continue
+            newKey = t.lower()
+            if "/" in newKey:
+                newKeyList = newKey.split("/")
+                newKeyList.sort()
+                newKey = "/".join(newKeyList)
+            if newKey in manaDict:
+                manaDict[newKey] = manaDict[newKey] + 1
+            else:
+                manaDict[newKey] = 1
+
+        return manaDict
+
+    # Recursively tries to see if it is possible to cast a card
+    def __isCardCastableDecision(self, cardMana, providedMana):
+        #print(" Testing case:\n  {}\n  {}\n  cml={}".format(cardMana, providedMana, len(cardMana.keys())))
+
+        if sum(cardMana.values()) > sum(providedMana.values()): #base case, for cards like reaper king
+        #    print("x cardMana < providedMana")
+            return False
+
+        if len(cardMana.keys()) == 1:
+            if cardMana['colorless'] <= sum(providedMana.values()):
+        #        print("colorless total is less than providedmana total")
+                return True
+            return False
+
+        #grab a random key from cardMana
+        ccombo = None
+        for k in cardMana:
+            if k is not "colorless":
+                ccombo = k
+                break
+
+        ncm = cardMana.copy()
+        ncm[k] = ncm[k]-1
+        if ncm[k] <= 0:
+            ncm.pop(k)
+
+        for c in ccombo.split("/"):
+
+            if c.isnumeric():
+                ncm2 = ncm.copy() #gross, but rare
+                if 'colorless' in ncm2:
+                    ncm2['colorless'] = ncm2['colorless'] + int(c)
+                else:
+                    ncm2['colorless'] = int(c)
+                if self.__isCardCastableDecision(ncm2, providedMana):
+                    return True
+
+            elif c in providedMana:
+                npm = providedMana.copy()
+                npm[c] = npm[c] - 1 
+                if npm[c] <= 0:
+                    npm.pop(c)
+                if self.__isCardCastableDecision(ncm, npm):
+                    return True
+
+        #print("Fell through!")
+        return False
+
+
+    # Returns true if the card's mana cost is a subset of the provided mana cost. If providedMana is none, automatically return true.
+    def isCardCastable(self, cardMana, providedMana):
+
+        if (providedMana == None) or (len(cardMana) == 0):
+            return True
+
+        if sum(cardMana.values()) > sum(providedMana.values()):
+            return False
+
+        cMana = cardMana.copy()
+        pMana = providedMana.copy()
+
+        if "colorless" not in cMana.keys():
+            cMana['colorless'] = 0
+
+
+        keysToPop = []
+
+        # For the simple case of W B U R G
+        for k in cMana.keys():
+            # for the simple-case
+            if ("/" in k) or (k == "colorless"):
+                continue
+            if k in pMana:
+                pMana[k] = pMana[k] - cMana[k]
+                keysToPop.append(k)
+                if pMana[k] < 0:
+                    return False
+            else:
+                return False
+
+        for ktp in keysToPop:
+            cMana.pop(ktp)
+
+        #print("Entering Recursive Case:\n  cMana={}\n  pMana={}".format(cMana, pMana))
+            
+        return self.__isCardCastableDecision(cMana, pMana) 
+        
+
+
+    # Gets a random card that is legal in commander based on restrictions.
+    def getRandomCard(self, color_restrictions=[], type_restrictions=[ 'Planeswalker', 'Creature', 'Sorcery', 'Instant', 'Artifact', 'Enchantment','Instant','Land' ], cmc_restriction=-1, cmcstrict=False, ccost=None):
+        cardList = []
+        cardDict = self.getLegalDict()
+        
+        # Filter cards that contain our filter colors.
+        # I could statically compute these but that performance gain probably isn't worth it. 
+        for key, val in cardDict.items():
+            addCardColor = True  
+
+            for c in color_restrictions:
+                if (c in val[0]['colorIdentity']):
+                    addCard = False
+                    break
+            if not addCardColor:
+                continue
+
+            addCardType = False
+            for t in type_restrictions:
+               if (t in val[0]['types']):
+                    addCardType = True
+                    break 
+            if not addCardType:
+                continue
+
+            addCardCMC = True
+            if cmc_restriction >= 0:
+                if cmcstrict:
+                    addCardCMC = val[0]['manaValue'] == cmc_restriction
+                else:
+                    addCardCMC = val[0]['manaValue'] <= cmc_restriction
+
+            if not addCardCMC:
+                continue
+
+            # Disabled due to being too costly
+            #if not (ccost == None):
+            #    if not self.isCardCastable( self.convertManaToDict(val[0]['manaCost'], False), ccost):
+            #        continue
+
+            cardList.append((key,val))
+       
+        if len(cardList) == 0:
+            return None, None
+        return choice(cardList)
+
+    # Returns a string with all the card's info
+    def cardStringifier(self, myCard, cardStats):
+
+        ret = "Your Card Was:```\n{}".format(myCard)
+        if 'manaCost' in cardStats[0]:
+            ret = ret + " {}".format(cardStats[0]['manaCost'])
+        ret = ret + "\n\n"
+        if 'supertypes' in cardStats[0]:
+            ret = ret + "{} ".format(" ".join(cardStats[0]['supertypes']))
+        if 'types' in cardStats[0]:
+            ret = ret + "{}".format(" ".join(cardStats[0]['types']))
+        if 'subtypes' in cardStats[0]:
+            ret = ret + " - {}".format(" ".join(cardStats[0]['subtypes']))
+        ret = ret + "\n\n"
+        if 'text' in cardStats[0]:
+            ret = ret + "{}".format(cardStats[0]['text'])
+        ret = ret + "\n\n"
+        if ('power' in cardStats[0]) and ('toughness' in cardStats[0]):
+            ret = ret + "Power:{} / Toughness:{}".format(cardStats[0]['power'],cardStats[0]['toughness'])
+        if 'loyalty' in cardStats[0]:
+            ret = ret + "Loyalty:{}".format(cardStats[0]['loyalty'])
+        ret = ret + "```"
+        return ret
+
+
+    ### Begin Discord Commands ###
+
+
     @commands.command(brief='Generates an EDH deck. Do "!edh help" for more info.', description='Makes a random EDH deck that is probably not good. Note double faced cards (which use "//" may need to be hand modified to be supported by whatever you shove this into. For further help type "!edh help"')
     async def edh(self, ctx, *args):
 
@@ -395,6 +585,71 @@ class EDHMaker(commands.Cog):
             return
 
 
+    @commands.command(brief='Spits out a random card', description='Gets a random card. You can restrict a card to have specific requirements. Check with !randomcard help')
+    async def randomcard(self, ctx, *args):
+        if len(args) == 0:
+            myCard, cardStats = self.getRandomCard()
+            if myCard == None:
+                await ctx.send("No cards found. :(")
+                return
+            else:
+                await ctx.send( self.cardStringifier(myCard, cardStats) )             
+                return
 
+        
+        elif args[0].lower() == "help":
+            myString =  """ Here is what I have so far:
+`!randomcard` - generates a random card.
+`!randomcard cmc=3` - generates a card with cmc less than or equal to 3.
+`!randomcard cmcstrict=3` - generates a card with cmc of 3 exactly.
+`!randomcard type=Instant` - generates a random instant
+`!randomcard cmc=2 type=Creature type=Enchantment` - generates a card that is either a creature or enchantment with cmc less than or equal to 3.
+                        """
+            await ctx.send(myString)
+            return
 
+        #Set default args
+        color_restrictions=[]
+        type_restrictions=[ 'Planeswalker', 'Creature', 'Sorcery', 'Instant', 'Artifact', 'Enchantment','Instant','Land' ]
+        my_types = [ ]
+        cmc_restriction=-1
+        cmcstrict=False
 
+        for a in args:
+            t_s = a.split("=")
+            if len(t_s) <= 1:
+                ctx.send("I didn't detect an assignment? Make sure not to use spaces between the '=' and the value.")
+                return
+
+            if a.lower().startswith("cmc="):
+                if t_s[1].isnumeric():
+                    cmc_restriction=int(t_s[1])
+                    cmcstrict=False
+                else:
+                    ctx.send("CMC Restriction needs to be a number?")
+                    return 
+            if a.lower().startswith("cmcstrict="):
+                if t_s[1].isnumeric():
+                    cmc_restriction=int(t_s[1])
+                    cmcstrict=True
+                else:
+                    ctx.send("CMC Restriction needs to be a number?")
+                    return
+
+            if a.lower().startswith("type"):
+                if t_s[1].capitalize() not in type_restrictions:
+                    ctx.send(" {} not a valid type. Valid types are: {}", t_s[1].capitalize(), type_restrictions)
+                    return
+                my_types.append(t_s[1].capitalize())
+
+        
+        if len(my_types) == 0:
+            my_types = type_restrictions
+
+        myCard, cardStats = self.getRandomCard(type_restrictions=my_types, cmc_restriction=cmc_restriction, cmcstrict=cmcstrict)
+        if myCard == None:
+            await ctx.send("No cards found. :(")
+            return
+        else:
+            await ctx.send(self.cardStringifier(myCard, cardStats))  
+            return
