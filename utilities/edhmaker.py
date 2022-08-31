@@ -12,6 +12,8 @@ from thefuzz import process
 
 class EDHMaker(commands.Cog):
 
+    serverTextChannel = None
+
     def __init__(self, bot, data_dir):
         # Discord specific stuff
         super().__init__()
@@ -535,12 +537,29 @@ class EDHMaker(commands.Cog):
         ret = ret + "```"
         return ret
 
+    ### Small Sanity Check to see if a command is in the correct channel. Returns true if the post should be ignored. ###
+    def channel_check(self, ctx):
+        return not((self.serverTextChannel == None) or (self.serverTextChannel == ctx.channel.id))
 
     ### Begin Discord Commands ###
 
+    @commands.command(brief='Sets this text channel for EDH function', description='Sets this text channel for EDH function and prohibits use of edh cog commands in other channels', hidden=True)
+    async def setEDHChannel(self, ctx, *args):
+        self.serverTextChannel = ctx.channel.id
+        await ctx.send(f"Set EDH channel to: {ctx.channel.id}")
+        return
+
+    @commands.command(brief='Sets this text channel for EDH function', description='Sets this text channel for EDH function and prohibits use of edh cog commands in other channels', hidden=True)
+    async def resetEDHChannel(self, ctx, *args): 
+        self.serverTextChannel = None 
+        await ctx.send("Reset EDH channel to have no restrictions.")
+        return
 
     @commands.command(brief='Generates an EDH deck. Do "!edh help" for more info.', description='Makes a random EDH deck that is probably not good. Note double faced cards (which use "//" may need to be hand modified to be supported by whatever you shove this into. For further help type "!edh help"')
     async def edh(self, ctx, *args):
+
+        if self.channel_check(ctx):
+            return
 
         # If no arguments, make an edh deck using whatever.
         if len(args) == 0:
@@ -570,7 +589,7 @@ class EDHMaker(commands.Cog):
             potential_cmdr_list.append(self.findBestCMDRMatch(args[1])[0])
             if len(args) > 2:
                 potential_cmdr_list.append(self.findBestCMDRMatch(args[2])[0]) 
-                
+               
             myString = self.dictToString(self.makeDeck(cmdrList=potential_cmdr_list))
             await ctx.send("Here's your deck with commander(s) {}:\n```{}```".format(potential_cmdr_list, myString))
             return
@@ -587,6 +606,9 @@ class EDHMaker(commands.Cog):
 
     @commands.command(brief='Spits out a random card', description='Gets a random card. You can restrict a card to have specific requirements. Check with !randomcard help')
     async def randomcard(self, ctx, *args):
+        if self.channel_check(ctx):
+            return
+
         if len(args) == 0:
             myCard, cardStats = self.getRandomCard()
             if myCard == None:
