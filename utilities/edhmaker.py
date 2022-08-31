@@ -12,7 +12,7 @@ from thefuzz import process
 
 class EDHMaker(commands.Cog):
 
-    serverTextChannel = None
+    serverTextChannel = []
 
     def __init__(self, bot, data_dir):
         # Discord specific stuff
@@ -539,19 +539,19 @@ class EDHMaker(commands.Cog):
 
     ### Small Sanity Check to see if a command is in the correct channel. Returns true if the post should be ignored. ###
     def channel_check(self, ctx):
-        return not((self.serverTextChannel == None) or (self.serverTextChannel == ctx.channel.id))
+        return not((len(self.serverTextChannel) == 0) or (ctx.channel.id in self.serverTextChannel))
 
     ### Begin Discord Commands ###
 
     @commands.command(brief='Sets this text channel for EDH function', description='Sets this text channel for EDH function and prohibits use of edh cog commands in other channels', hidden=True)
     async def setEDHChannel(self, ctx, *args):
-        self.serverTextChannel = ctx.channel.id
-        await ctx.send(f"Set EDH channel to: {ctx.channel.id}")
+        self.serverTextChannel.append(ctx.channel.id)
+        await ctx.send(f"Set EDH channel list to: {self.serverTextChannel}")
         return
 
     @commands.command(brief='Sets this text channel for EDH function', description='Sets this text channel for EDH function and prohibits use of edh cog commands in other channels', hidden=True)
     async def resetEDHChannel(self, ctx, *args): 
-        self.serverTextChannel = None 
+        self.serverTextChannel = []
         await ctx.send("Reset EDH channel to have no restrictions.")
         return
 
