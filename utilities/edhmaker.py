@@ -545,12 +545,17 @@ class EDHMaker(commands.Cog):
 
     @commands.command(brief='Sets this text channel for EDH function', description='Sets this text channel for EDH function and prohibits use of edh cog commands in other channels', hidden=True)
     async def setEDHChannel(self, ctx, *args):
+        if ctx.author.guild_permissions.administrator == False:
+            return
+
         self.serverTextChannel.append(ctx.channel.id)
         await ctx.send(f"Set EDH channel list to: {self.serverTextChannel}")
         return
 
     @commands.command(brief='Sets this text channel for EDH function', description='Sets this text channel for EDH function and prohibits use of edh cog commands in other channels', hidden=True)
     async def resetEDHChannel(self, ctx, *args): 
+        if ctx.author.guild_permissions.administrator == False:
+            return
         self.serverTextChannel = []
         await ctx.send("Reset EDH channel to have no restrictions.")
         return

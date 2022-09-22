@@ -1,0 +1,33 @@
+{
+  "roles": {
+    "king": {
+      "rules": {
+        "1": "Reveal your role and start with 10 extra life. You go first. Your goal is to win as usual by killing everyone else."
+      }
+    },
+    "knight": {
+      "rules": {
+        "1": "You win if the King wins. You do not need to be alive."
+      }
+    },
+    "assassin": {
+      "rules": {
+        "1": "You win if everyone else is dead and the bandits have not won."
+      }
+    },
+    "usurper": {
+      "optional": true,
+      "rules": {
+        "1": "You must deal the killing blow to the king. If you do, your life total becomes 10 more than the starting life total and you become the new king. The old king's becomes the usurper and their life total becomes 1."
+      }
+    },
+    "bandit": {
+      "count": "2",
+      "rules": {
+        "1": "If the king dies before both of the bandits, the bandits die. There are two of you.",
+        "2": "If the king dies before both of the bandits, the bandits die. There are two of you."
+      }
+    }
+  },
+  "global_info": "The king is {roles:king}"
+}

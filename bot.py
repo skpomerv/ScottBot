@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 from utilities.oscommands import OSCommands
 from utilities.gameslistutils import GamesListUtils
 from utilities.edhmaker import EDHMaker
+from utilities.kingdoms import Kingdoms
 
 def main():
 
@@ -33,6 +34,7 @@ def main():
     bot.add_cog(GamesListUtils(bot))
     bot.add_cog(OSCommands(bot))
     bot.add_cog(EDHMaker(bot, bot_dir+'/utilities/edhmaker_data' ))
+    bot.add_cog(Kingdoms(bot, bot_dir+'/utilities/kingdoms_data'))
 
     @bot.event
     async def on_ready():
@@ -45,8 +47,6 @@ def main():
     
         members = '\n - '.join([member.name for member in guild.members])
         print(f'Guild Members:\n - {members}')
-
-
 
     bot.run(TOKEN)
 
