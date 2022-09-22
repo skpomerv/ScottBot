@@ -132,21 +132,21 @@ class Kingdoms(commands.Cog):
 
 
     ### Commands ###
-    @commands.command(hidden=True, brief='Sets a channel to be for Kingdoms Games', description='Begins a game of Kingdoms')
+    @commands.command(hidden=True, brief='Sets a channel to be for Kingdoms Games', description='Sets a channel to be for Kingdoms Games')
     async def setKingdomsChannel(self, ctx, *args):
         if ctx.author.guild_permissions.administrator == False:
             return
         self.kingdomsChannel = ctx.channel.id
-        await channel.send(f"Kingdoms channel has been set to {ctx.channel}")
+        await ctx.send(f"Kingdoms channel has been set to {self.kingdomsChannel}")
 
 
-    @commands.command(hidden=True, brief='Sets a channel to be for Kingdoms Games', description='Begins a game of Kingdoms')
+    @commands.command(hidden=True, brief='Resets the channel to be for Kingdoms Games', description='Resets Dedicated Channel')
     async def resetKingdomsChannel(self, ctx, *args):
         if ctx.author.guild_permissions.administrator == False:
             return
 
         self.kingdomsChannel = None
-        await channel.send(f"Kingdoms channel has been reset")
+        await ctx.send(f"Kingdoms channel has been reset")
 
     @commands.command(brief='Preps and starts a game of kingdoms', description='Begins a game of Kingdoms')
     async def kingdoms(self, ctx, *args):
