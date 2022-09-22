@@ -67,28 +67,22 @@ class Kingdoms(commands.Cog):
         random.shuffle(playerListCopy)
         random.shuffle(optional_roles)
 
-
-        print(f"Mandatory: {mandatory_roles}\nOptional: {optional_roles}")
         #Next step, assign mandatory roles first
         for i in range(0, len(mandatory_roles)):
             cur = playerListCopy.pop(0)
-            print(f"Popped: {cur} // List: {playerListCopy}\n")
 
             rolename = mandatory_roles.pop(0) 
             #get the chosen rule from the dict
             randkey = random.choice(list(role_dict[rolename]['rules'].keys()))
             player_dict[cur] = f"Your role is: {rolename}\n{role_dict[rolename]['rules'][randkey]}"
-            print(f"Player {cur} gets: {player_dict[cur]}\n")
 
             del role_dict[rolename]['rules'][randkey]
 
         for i in range(0, len(playerListCopy)): 
             cur = playerListCopy.pop(0)
-            print(f"Optional Popped: {cur} // List: {playerListCopy}\n")
             rolename = optional_roles.pop(0) 
             randkey = random.choice(list(role_dict[rolename]['rules'].keys()))
             player_dict[cur] = f"Your role is: {rolename}\n{role_dict[rolename]['rules'][randkey]}"
-            print(f"Player {cur} gets: {player_dict[cur]}\n")
 
         return player_dict
 
@@ -98,7 +92,7 @@ class Kingdoms(commands.Cog):
         if (self.signupMessage != None):
             await ctx.send("Signup for a game has already started. React to that post with any emote to sign up.")
             return
-        self.signupMessage = await ctx.send("React to this post to give yourself a Kingdoms Role. For a default game, up to 6 players may join at the moment and at least 5 players must be in the game to start. The signup will cancel if `!kingdoms start` has been run or `!kingdoms abandon` has been run.\n")
+        self.signupMessage = await ctx.send("React to this post to give yourself a Kingdoms Role. For a default game, up to 6 players may join at the moment and at least 5 players must be in the game to start. The signup will cancel if `!kingdoms start` has been run or `!kingdoms abandon` has been run.\nNote: Removing an emote does not remove you from the queue, so it is advised to reset the game if that is the case.")
         return
 
     async def startGame(self, ctx, *args):
@@ -108,12 +102,20 @@ class Kingdoms(commands.Cog):
 
         role_list = self.assign_roles()
         #If it is a string and not a dict, that means we have an error
-        if role_list == isinstance(role_list, str):
+        if isinstance(role_list, str):
             await ctx.send(role_list)
+            await ctx.send("The game signup has not been reset, so if you need to clear the settings, do so manually.")
+            return
 
+        # Send out messages with the roles.
         for uid in self.playerList:
             user = await self.bot.fetch_user(uid)
             await user.send(role_list[uid]) 
+
+        # Prep for a new game
+        self.signupMessage = None
+        self.playerList = []
+        self.variant = "default"
 
 
     ### Listeners ##
@@ -126,10 +128,8 @@ class Kingdoms(commands.Cog):
             if not (payload.user_id in self.playerList):
                 self.playerList.append(payload.user_id)
                 await user.send("You have been queued for the next game!")
-        await channel.send(f"Current User List: {self.playerList}")
         return 
 
-        
 
     ### Commands ###
     @commands.command(hidden=True, brief='Sets a channel to be for Kingdoms Games', description='Begins a game of Kingdoms')
@@ -156,10 +156,12 @@ class Kingdoms(commands.Cog):
         if len(args) == 0:
             await self.signup(ctx, args)
             return
+        elif args[0].lower() == "help":
+            await ctx.send("`!kingdoms` starts a game. `!kingdoms start` begins it. `!kingdoms reset` resets the queue in case a previous signup needs to be abandoned.")
         #elif args[0].lower() == "variant":
         #    if len(args) == 1:
         #        await ctx.send(f"Variant needs an argument? Currently the legal options are {self.vList}") 
-        elif args[0].lower() == "abandon":
+        elif (args[0].lower() == "abandon") or (args[0].lower() == "reset"):
             self.signupMessage = None
             for uid in self.playerList:
                 user = await self.bot.fetch_user(uid)
