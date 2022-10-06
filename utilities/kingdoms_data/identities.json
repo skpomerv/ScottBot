@@ -1,0 +1,30 @@
+{
+  "roles": {
+    "identity": {
+      "optional": true,
+      "count": "20",
+      "rules": {
+        "1":  "{3}, Pay 2 life: Reveal this Identity\n When this identity is revealed, counter a spell or ability. This ability can be countered as though it were a spell.\n{3}: Unreveal this Identity. You may play this ability only during your upkeep and only once per turn.",
+        "2":  "{4}: Reveal this Identity\n During your draw step, you may draw an additional card. If you do, pay 2 life or place a card from your hand to the bottom of your library.",
+        "3":  "{3}: Reveal this Identity\n When this identity is revealed, place reset counters equal to the number of players. These counters cannot be proliferated.\n{3}, Remove a Reset Counter: Untap all permanents you control. Play this Ability once per turn.",
+        "4":  "{5}: Reveal this Identity\n For the rest of the game, whenever a spell or ability an opponent controls destroys a nontoken permanent you control, gain a treasure token.\nSacrifice 3 treasures: Target Player draws 1 card.",
+        "5":  "{0}: Reveal this Identity\n When this identity is revealed, draw one card, create 3 treasure tokens and your maximum hand size is increased by 1 for as long as this identity is revealed.",
+        "6":  "{4}: Reveal this Identity\n {2}: Copy target activated or triggered ability you control.",
+        "7":  "{5}: Reveal this Identity\n When this identity is revealed, choose X permanents, where X is half the number of players, rounded down. Exile those permanents. (This ability does not target).",
+        "8":  "{X}{2}: Reveal this Identity\n When this identity is revealed, scry X. Then, reveal the top card of your library. You may cast it without playing it's mana cost.",
+        "9":  "{5}: Reveal this Identity\n Until your next turn prevent all damage that would be dealt to target player and each permanent they control.",
+        "10": "{6}: Reveal this Identity\n When this identity is revealed, exile up to 5 target nonland permanents. They enter the battlefield tapped under their owner's control at the beginning of the next end step.",
+        "11": "{7}: Reveal this Identity\n When this identity is revealed, target opponent loses 7 life and you gain 7 life. Choose a player. That player gains hexproof for 2 turns and cannot be attacked. (Their permanents and planeswalkers can, however).",
+        "12": "{X}{X}{1} Reveal this Identity\n When this identity is revealed, gain X life and draw X cards. Until end of turn, all damage that would be dealt to the King is dealt to you.",
+        "13": "{6}: Reveal this Identity\n When this identity is revealed, end the turn.",
+        "14": "{4}: Reveal this Identity, only reveal during combat, and during the declare blockers phase\n When this identity is revealed, untap all attacking creatures and remove them from combat. After this phase is another combat phase. All creatures that had been removed from combat must attack another player, if able.",
+        "15": "{4}: Reveal this Identity\n During your upkeep, if you do not control a creature named Mind Goblin, get a 1/3 Legendary Creature Token called Mind Goblin, and do the same for an enchantment called Deez Nuts. Mind Goblin has Indestructible and the ability \"Sacrifice Deez Nuts: Tap target creature. It does not untap during it's controller's next untap step.\"",
+        "16": "{6}: Reveal this Identity\n Target player gains control of target spell. That player may choose new targets for the spell.",
+        "17": "{5}: Reveal this Identity\n Up to two target players create two 4/4 green beast creature tokens.",
+        "18": "{5}, Pay 2 life: Reveal this Identity\n Any number of target players mill 3 cards. For each player that milled a creature this way, you may place up to one of their milled creatures onto the battlefield ",
+        "19": "{4}: Reveal this Identity\n When you reveal this identity, you may search through your library for a card and place it into your hand.",
+        "20": "{4}: Reveal this Identity\n Choose any number of opponents: They reveal their hand. You may exile up to one nonland card from their hand. "
+      }
+    }
+  }
+}

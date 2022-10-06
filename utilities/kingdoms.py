@@ -6,7 +6,7 @@ import random
 # Gives players a hidden role for the game Kingdoms
 class Kingdoms(commands.Cog):
     data_dir = None
-    vList = [ "default" ]
+    vList = [ "default", "identities" ]
     signupMessage = None
     playerList = []
     variant = "default"
@@ -158,9 +158,14 @@ class Kingdoms(commands.Cog):
             return
         elif args[0].lower() == "help":
             await ctx.send("`!kingdoms` starts a game. `!kingdoms start` begins it. `!kingdoms reset` resets the queue in case a previous signup needs to be abandoned.")
-        #elif args[0].lower() == "variant":
-        #    if len(args) == 1:
-        #        await ctx.send(f"Variant needs an argument? Currently the legal options are {self.vList}") 
+        elif args[0].lower() == "variant":
+            if len(args) == 1:
+                await ctx.send(f"Variant needs an argument? Currently the legal options are {self.vList}") 
+            if args[1].lower() in self.vList:
+                await ctx.send(f"Variant has been set to {args[1]}") 
+                self.variant = args[1].lower()
+            else:
+                await ctx.send(f"Variant is invalid? Currently the legal options are {self.vList}") 
         elif (args[0].lower() == "abandon") or (args[0].lower() == "reset"):
             self.signupMessage = None
             for uid in self.playerList:
