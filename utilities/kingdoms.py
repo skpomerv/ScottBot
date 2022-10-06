@@ -88,12 +88,25 @@ class Kingdoms(commands.Cog):
 
     # Stuff For Signup and Start Game
 
+    def makeSignupString(self):
+        return f"React to this post to give yourself a Kingdoms Role. For a default game, up to 6 players may join at the moment and at least 5 players must be in the game to start. The signup will cancel if `!kingdoms start` has been run or `!kingdoms abandon` has been run.\nNote: Removing an emote does not remove you from the queue, so it is advised to reset the game if that is the case.\n Current Game Mode is: `{self.variant}`" 
+
     async def signup(self, ctx, *args):
         if (self.signupMessage != None):
             await ctx.send("Signup for a game has already started. React to that post with any emote to sign up.")
             return
-        self.signupMessage = await ctx.send("React to this post to give yourself a Kingdoms Role. For a default game, up to 6 players may join at the moment and at least 5 players must be in the game to start. The signup will cancel if `!kingdoms start` has been run or `!kingdoms abandon` has been run.\nNote: Removing an emote does not remove you from the queue, so it is advised to reset the game if that is the case.")
+        self.signupMessage = await ctx.send(self.makeSignupString())
         return
+
+    async def reupdateSignup(self):
+        if self.signupMessage == None:
+            return
+        await self.signupMessage.edit(content=self.makeSignupString())
+
+    async def endSignup(self): 
+        if self.signupMessage == None:
+            return
+        await self.signupMessage.edit(content="This Game's Signup has Concluded. Start a new game with !kingdoms")
 
     async def startGame(self, ctx, *args):
         if self.signupMessage == None:
@@ -113,6 +126,7 @@ class Kingdoms(commands.Cog):
             await user.send(role_list[uid]) 
 
         # Prep for a new game
+        await self.endSignup()
         self.signupMessage = None
         self.playerList = []
         self.variant = "default"
@@ -157,16 +171,18 @@ class Kingdoms(commands.Cog):
             await self.signup(ctx, args)
             return
         elif args[0].lower() == "help":
-            await ctx.send("`!kingdoms` starts a game. `!kingdoms start` begins it. `!kingdoms reset` resets the queue in case a previous signup needs to be abandoned.")
+            await ctx.send(f"`!kingdoms` starts a game. `!kingdoms start` begins it. `!kingdoms reset` resets the queue in case a previous signup needs to be abandoned.\n`!kingdoms variant variant_name` changes the mode. Legal modes are {self.vList}")
         elif args[0].lower() == "variant":
             if len(args) == 1:
                 await ctx.send(f"Variant needs an argument? Currently the legal options are {self.vList}") 
-            if args[1].lower() in self.vList:
+            elif args[1].lower() in self.vList:
                 await ctx.send(f"Variant has been set to {args[1]}") 
                 self.variant = args[1].lower()
+                await self.reupdateSignup()
             else:
                 await ctx.send(f"Variant is invalid? Currently the legal options are {self.vList}") 
         elif (args[0].lower() == "abandon") or (args[0].lower() == "reset"):
+            await self.endSignup()
             self.signupMessage = None
             for uid in self.playerList:
                 user = await self.bot.fetch_user(uid)
