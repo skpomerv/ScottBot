@@ -11,6 +11,10 @@ The OS module expects linux and the `fortune` bash command installed.
 
 Note this is developed for python 3.
 
+Create a .env with the DISCORD\_TOKEN environment variable set with your api to get it up and running.
+
+I suggest not using the utilities/gameslistutils.py as it is for personal use. There is also a reference to oscommands.py which is not included in this repo due to it being computer-specific.
+
 ## License
 
 MIT License
