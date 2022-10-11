@@ -82,12 +82,12 @@ class Kingdoms(commands.Cog):
             cur = playerListCopy.pop(0)
             rolename = optional_roles.pop(0) 
             randkey = random.choice(list(role_dict[rolename]['rules'].keys()))
+            del role_dict[rolename]['rules'][randkey]
             player_dict[cur] = f"Your role is: {rolename}\n{role_dict[rolename]['rules'][randkey]}"
 
         return player_dict
 
     # Stuff For Signup and Start Game
-
     def makeSignupString(self):
         return f"React to this post to give yourself a Kingdoms Role. For a default game, up to 6 players may join at the moment and at least 5 players must be in the game to start. The signup will cancel if `!kingdoms start` has been run or `!kingdoms abandon` has been run.\nNote: Removing an emote does not remove you from the queue, so it is advised to reset the game if that is the case.\n Current Game Mode is: `{self.variant}`" 
 
@@ -98,16 +98,19 @@ class Kingdoms(commands.Cog):
         self.signupMessage = await ctx.send(self.makeSignupString())
         return
 
+    # If stuff about signup changes, this method quickly reupdates the original signup message to keep things a bit organized.
     async def reupdateSignup(self):
         if self.signupMessage == None:
             return
         await self.signupMessage.edit(content=self.makeSignupString())
 
+    # Deletes old signups to minimize confusion.
     async def endSignup(self): 
         if self.signupMessage == None:
             return
         await self.signupMessage.edit(content="This Game's Signup has Concluded. Start a new game with !kingdoms")
 
+    # Starts the game. Simply this assigns roles and starts the game. This will re-set signup after as well.
     async def startGame(self, ctx, *args):
         if self.signupMessage == None:
             await ctx.send("No signup has been detected! Please use `!kingdoms` to start!\n")
@@ -132,7 +135,9 @@ class Kingdoms(commands.Cog):
         self.variant = "default"
 
 
-    ### Listeners ##
+    ### Listeners ###
+
+    # On a reaction, if this is the signup message, add them to the next game to be played
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
         channel = await self.bot.fetch_channel(payload.channel_id)
@@ -146,6 +151,7 @@ class Kingdoms(commands.Cog):
 
 
     ### Commands ###
+    # Sets up this channel to be the only one listened in on by the bot. Too lazy at the moment to make the bot remember channels when the bot re-starts, but maybe one day...
     @commands.command(hidden=True, brief='Sets a channel to be for Kingdoms Games', description='Sets a channel to be for Kingdoms Games')
     async def setKingdomsChannel(self, ctx, *args):
         if ctx.author.guild_permissions.administrator == False:
@@ -153,7 +159,7 @@ class Kingdoms(commands.Cog):
         self.kingdomsChannel = ctx.channel.id
         await ctx.send(f"Kingdoms channel has been set to {self.kingdomsChannel}")
 
-
+    # Resets the specific kingdoms channel so kingdoms can be played anywhere
     @commands.command(hidden=True, brief='Resets the channel to be for Kingdoms Games', description='Resets Dedicated Channel')
     async def resetKingdomsChannel(self, ctx, *args):
         if ctx.author.guild_permissions.administrator == False:
@@ -162,6 +168,8 @@ class Kingdoms(commands.Cog):
         self.kingdomsChannel = None
         await ctx.send(f"Kingdoms channel has been reset")
 
+
+    # Preps a signup for Kingdoms.
     @commands.command(brief='Preps and starts a game of kingdoms', description='Begins a game of Kingdoms')
     async def kingdoms(self, ctx, *args):
         if not (self.kingdomsChannel == None or self.kingdomsChannel == ctx.channel.id):
