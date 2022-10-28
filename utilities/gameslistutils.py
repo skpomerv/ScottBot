@@ -11,9 +11,9 @@ class GamesListUtils(commands.Cog):
     def __init__(self, bot):
         super().__init__()
         self.bot = bot
+        self.game_directory_location = os.getenv('GAMES_DIR')
+        print("GAMES_DIR detected as {}".format(self.game_directory_location)) 
 
-    game_directory_location = os.getenv('GAMES_DIR')
-   
 
     # generates a list of the games in GAMES_DIR and spits out their GAMES_URL+extension
     # so people can download the games easier 
