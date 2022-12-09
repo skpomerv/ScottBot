@@ -44,6 +44,12 @@ class GamesListUtils(commands.Cog):
     async def listgames(self, ctx):
         if ctx.author.guild_permissions.administrator == False:
             return
+        # Delete bot posts of the last 20 messages
+        past_messages= await ctx.channel.history(limit=20).flatten()
+        for message in past_messages:
+            if message.author == self.bot.user:
+                await message.delete()
+
         for resp in self.generate_games_list():
                 embed=discord.Embed(title="Games List",
                 url=os.getenv('GAMES_URL')  ,
