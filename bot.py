@@ -1,10 +1,10 @@
-#!/usr/bin/python3
-
+#!/usr/bin/python3.9
 #imports
 import os
 import discord
 import urllib
 import time
+import asyncio
 from discord.ext import commands
 from discord.ext.commands import Bot
 from dotenv import load_dotenv
@@ -14,6 +14,7 @@ from utilities.oscommands import OSCommands
 from utilities.gameslistutils import GamesListUtils
 from utilities.edhmaker import EDHMaker
 from utilities.kingdoms import Kingdoms
+#from utilities.dungeonsanddorks import DungeonsAndDorks
 
 def main():
 
@@ -26,15 +27,16 @@ def main():
 
     load_dotenv()
     TOKEN = os.getenv('DISCORD_TOKEN')
-    #client = discord.Client()  
- 
-    bot = commands.Bot(command_prefix='!')
+
+
+    # Generate intents for the bot
+    intents = discord.Intents.default()
+    intents.message_content = True
+    bot = commands.Bot(command_prefix='!', intents=intents)
 
     #Enable cogs
-    bot.add_cog(GamesListUtils(bot))
-    bot.add_cog(OSCommands(bot))
-    bot.add_cog(EDHMaker(bot, bot_dir+'/utilities/edhmaker_data' ))
-    bot.add_cog(Kingdoms(bot, bot_dir+'/utilities/kingdoms_data'))
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(setup(bot, bot_dir))
 
     @bot.event
     async def on_ready():
@@ -49,6 +51,13 @@ def main():
         print(f'Guild Members:\n - {members}')
 
     bot.run(TOKEN)
+
+async def setup(bot, bot_dir):
+    await bot.add_cog(GamesListUtils(bot))
+    await bot.add_cog(OSCommands(bot))
+    await bot.add_cog(EDHMaker(bot, bot_dir+'/utilities/edhmaker_data' ))
+    await bot.add_cog(Kingdoms(bot, bot_dir+'/utilities/kingdoms_data'))
+#    await bot.add_cog(DungeonsAndDorks(bot))
 
 if __name__ == "__main__":
     main()

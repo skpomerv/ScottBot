@@ -45,15 +45,15 @@ class GamesListUtils(commands.Cog):
         if ctx.author.guild_permissions.administrator == False:
             return
         # Delete bot posts of the last 20 messages
-        past_messages= await ctx.channel.history(limit=20).flatten()
-        for message in past_messages:
+        past_messages = ctx.channel.history(limit=20)
+        async for message in past_messages:
             if message.author == self.bot.user:
                 await message.delete()
 
         for resp in self.generate_games_list():
                 embed=discord.Embed(title="Games List",
-                url=os.getenv('GAMES_URL')  ,
-                description=resp,
-                color=0xFF5733)
+                        url=os.getenv('GAMES_URL')  ,
+                        description=resp,
+                        color=0xFF5733)
                 await ctx.send(embed=embed)    
 

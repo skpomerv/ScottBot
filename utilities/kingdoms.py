@@ -55,6 +55,8 @@ class Kingdoms(commands.Cog):
                     min_players = min_players + 1
                     max_players = max_players + 1;
                     mandatory_roles.append(key)
+        if min_players == 0:
+            min_players = min_players + 1
 
         player_count = len(self.playerList)
         if (player_count < min_players) or (player_count > max_players):
@@ -82,8 +84,8 @@ class Kingdoms(commands.Cog):
             cur = playerListCopy.pop(0)
             rolename = optional_roles.pop(0) 
             randkey = random.choice(list(role_dict[rolename]['rules'].keys()))
-            del role_dict[rolename]['rules'][randkey]
             player_dict[cur] = f"Your role is: {rolename}\n{role_dict[rolename]['rules'][randkey]}"
+            del role_dict[rolename]['rules'][randkey]
 
         return player_dict
 
