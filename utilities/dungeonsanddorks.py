@@ -53,23 +53,31 @@ class modalField(ui.Modal):
         health_pool = 20 + statDict['str'] + 2 * statDict['res']
         init = statDict['dex'] + math.floor(statDict['luk']/2)
 
+        unarmed_stat = statDict['dex'] if statDict['dex'] > statDict['str'] else statDict['str']
+
+        unarmed=f"{unarmed_stat} + proficiency"
+        unarmed_dmg=f"{unarmed_stat} + proficiency/2"
         dex_weapon=f"Weapon Bonus + {statDict['dex']} + proficiency"
         dex_weapon_dmg=f"Damage = d* + {statDict['dex']} + proficiency" 
         str_weapon=f"Weapon Bonus + {statDict['str']} + proficiency"
         str_weapon_dmg=f"Damage = d* + {statDict['str']} + proficiency" 
 
-        resp_list = [ 
-            "Player Stats:",
+        resp_list_left = [ 
             f"STR: {statDict['str']}",
             f"DEX: {statDict['dex']}",
             f"RES: {statDict['res']}",
             f"CHA: {statDict['cha']}",
             f"CLV: {statDict['clv']}",
             f"LUK: {statDict['luk']}",
-            "",
+        ]
+        resp_list_right = [
             f"AC: {armor_class}",
             f"HP: {health_pool}",
-            f"INIT: {init}",
+            f"INIT: {init}"
+        ]
+        resp_list_bottom = [
+            f"Unarmed Hit: {unarmed}",
+            f"Unarmed DMG: {unarmed_dmg}",
             f"DEX WEP HIT: {dex_weapon}",
             f"DEX WEP DMG: {dex_weapon_dmg}",
             f"STR WEP HIT: {str_weapon}",
@@ -81,9 +89,11 @@ class modalField(ui.Modal):
 
         embed = nextcord.Embed(
             title=self.name.value,
-            description="\n".join(resp_list),
             color=0xFF5733
         )
+        embed.add_field(name="Base Stats:",             value="\n".join(resp_list_left))
+        embed.add_field(name="Secondary Stats:",        value="\n".join(resp_list_right))
+        embed.add_field(name="Combat Stats:",           value="\n".join(resp_list_bottom), inline=False)
         await interaction.send(embed=embed)
 
 ##########################################
