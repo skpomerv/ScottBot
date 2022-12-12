@@ -1,6 +1,6 @@
 import subprocess
-from discord.ext import commands
-from discord.ext.commands import Bot
+from nextcord.ext import commands
+from nextcord.ext.commands import Bot
 
 # Runs commands on the OS and spits out results
 class OSCommands(commands.Cog):

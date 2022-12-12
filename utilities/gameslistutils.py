@@ -1,12 +1,12 @@
-from discord.ext import commands
+from nextcord.ext import commands
 import os
-import discord
+import nextcord
 import urllib
 import time
-from discord.ext.commands import Bot
+from nextcord.ext.commands import Bot
 
 # A small class to list the games in one of my directories and spit out fast URLS for them.
-# This is spammy so only administrators of a discord server can call this.
+# This is spammy so only administrators of a nextcord server can call this.
 class GamesListUtils(commands.Cog):
     def __init__(self, bot):
         super().__init__()
@@ -51,7 +51,7 @@ class GamesListUtils(commands.Cog):
                 await message.delete()
 
         for resp in self.generate_games_list():
-                embed=discord.Embed(title="Games List",
+                embed=nextcord.Embed(title="Games List",
                         url=os.getenv('GAMES_URL')  ,
                         description=resp,
                         color=0xFF5733)

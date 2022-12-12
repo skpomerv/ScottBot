@@ -1,6 +1,6 @@
-import discord
-from discord.ext import commands
-from discord.ext.commands import Bot
+import nextcord
+from nextcord.ext import commands
+from nextcord.ext.commands import Bot
 
 import json 
 import re

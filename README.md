@@ -1,15 +1,18 @@
 # Scottbot - Discord Funtimes
 ### This is a bot for personal use. Feel free to take and modify as-needed
 ##### Before Using:
-Place the newest [MTGJson AtomicCards.json](https://mtgjson.com/api/v5/AtomicCards.json) in ./utilities/edh_maker/
+Place the newest [MTGJson AtomicCards.json](https://mtgjson.com/api/v5/AtomicCards.json) in ./utilities/edh\_maker/
 
-Install thefuzz with `pip3 install thefuzz`
+Install thefuzz with `python3 -m pip install thefuzz`
 
-Optional but recommended for performance purposes: `pip3 install python-Levenshtein`
+Optional but recommended for performance purposes: `python3 -m pip install python-Levenshtein`
+
+We also need Discord.py (obviously) with `python3 -m pip install discord`
+
 
 The OS module expects linux and the `fortune` bash command installed.
 
-Note this is developed for python 3.
+Note this is developed for python 3.9, and previous versions are not guarunteed.
 
 Create a .env with the DISCORD\_TOKEN environment variable set with your api to get it up and running.
 
