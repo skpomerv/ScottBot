@@ -1,22 +1,32 @@
 # Scottbot - Discord Funtimes
 ### This is a bot for personal use. Feel free to take and modify as-needed
-##### Before Using:
-Place the newest [MTGJson AtomicCards.json](https://mtgjson.com/api/v5/AtomicCards.json) in ./utilities/edh\_maker/
+#### Before Using:
 
+##### General Requirements
 Install thefuzz with `python3 -m pip install thefuzz`
 
 Optional but recommended for performance purposes: `python3 -m pip install python-Levenshtein`
 
-We also need Discord.py (obviously) with `python3 -m pip install discord`
-
-
-The OS module expects linux and the `fortune` bash command installed.
+We also need NextCord.py with `python3 -m pip install -U nextcord`
 
 Note this is developed for python 3.9, and previous versions are not guarunteed.
 
 Create a .env with the DISCORD\_TOKEN environment variable set with your api to get it up and running.
 
 I suggest not using the utilities/gameslistutils.py as it is for personal use. There is also a reference to oscommands.py which just runs fortune, if your machine has it.
+
+##### For EDH Maker Util: 
+Place the newest [MTGJson AtomicCards.json](https://mtgjson.com/api/v5/AtomicCards.json) in ./utilities/edh\_maker/
+
+##### For OS:
+The OS module expects linux and the `fortune` bash command installed.
+
+##### For CardMaker:
+The CardMaker Module needs the Pillow python imaging library installed and BytesIO.
+`python3 -m pip install --upgrade Pillow`
+
+## Disclaimer
+This is designed to be a small side-project I work on as a hobby. Expect infrequent updates on inconsequential stuff. Many things are designed with my personal environment in mind. If you would like, feel free to simply take whatever you need out of the utilities folder and use it for your own ends.
 
 ## License
 

@@ -21,6 +21,7 @@ from utilities.gameslistutils import GamesListUtils
 from utilities.edhmaker import EDHMaker
 from utilities.kingdoms import Kingdoms
 from utilities.dungeonsanddorks import DungeonsAndDorks
+from utilities.cardmaker import CardMaker
 
 def main():
     #get file directory
@@ -31,20 +32,20 @@ def main():
 
     load_dotenv()
     TOKEN = os.getenv('DISCORD_TOKEN')
-
-    DND_GUILDS = os.getenv('DND_GUILDS')
+    GUILDS = os.getenv('DND_GUILDS')
 
     # Generate intents for the bot
     intents = nextcord.Intents.default()
     intents.message_content = True
     bot = commands.Bot(command_prefix='!', intents=intents)
-
+    
     #Enable cogs
     bot.add_cog(GamesListUtils(bot))
     bot.add_cog(OSCommands(bot))
     bot.add_cog(EDHMaker(bot, bot_dir+'/utilities/edhmaker_data' ))
     bot.add_cog(Kingdoms(bot, bot_dir+'/utilities/kingdoms_data'))
-    bot.add_cog(DungeonsAndDorks(bot, DND_GUILDS.split(",")))
+    bot.add_cog(DungeonsAndDorks(bot, GUILDS.split(",")))
+    #bot.add_cog(CardMaker(bot, GUILDS.split(","),bot_dir+'/utilities/edhmaker_data',os.getenv('FAKE_CARD_DIR')))
 
     @bot.event
     async def on_ready():

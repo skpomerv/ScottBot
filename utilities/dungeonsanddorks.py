@@ -1,4 +1,3 @@
-import os # for getenv
 import nextcord
 from nextcord import ui
 from nextcord.ext import commands
@@ -33,6 +32,14 @@ class modalField(ui.Modal):
         )
         self.add_item(self.stats)
 
+    # On error or close, make sure to close the modal.
+    async def error(self, error, interaction) -> None:
+        self.stop()
+
+    async def on_timeout(self) -> None:
+        self.stop()
+
+    # On submission, calculate relevant stats.
     async def callback(self, interaction: nextcord.Interaction) -> None:
         # Validate input and load in dictionary
         splitStr = self.stats.value.split("\n")
@@ -95,6 +102,7 @@ class modalField(ui.Modal):
         embed.add_field(name="Secondary Stats:",        value="\n".join(resp_list_right))
         embed.add_field(name="Combat Stats:",           value="\n".join(resp_list_bottom), inline=False)
         await interaction.send(embed=embed)
+        self.stop()
 
 ##########################################
 

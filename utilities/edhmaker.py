@@ -395,7 +395,7 @@ class EDHMaker(commands.Cog):
         #grab a random key from cardMana
         ccombo = None
         for k in cardMana:
-            if k is not "colorless":
+            if k != "colorless":
                 ccombo = k
                 break
 
