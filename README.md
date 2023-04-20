@@ -16,7 +16,7 @@ Create a .env with the DISCORD\_TOKEN environment variable set with your api to 
 I suggest not using the utilities/gameslistutils.py as it is for personal use. There is also a reference to oscommands.py which just runs fortune, if your machine has it.
 
 ##### For EDH Maker Util: 
-Place the newest [MTGJson AtomicCards.json](https://mtgjson.com/api/v5/AtomicCards.json) in ./utilities/edh\_maker/
+On bootup, the newest version of [MTGJson AtomicCards.json](https://mtgjson.com/api/v5/AtomicCards.json) is automatically downloaded into ./utilities/edh\_maker/
 
 ##### For OS:
 The OS module expects linux and the `fortune` bash command installed.
