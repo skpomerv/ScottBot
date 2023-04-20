@@ -4,6 +4,7 @@ from nextcord.ext.commands import Bot
 
 import json 
 import re
+import requests
 #import collections
 from random import sample
 from random import choice
@@ -25,6 +26,11 @@ class EDHMaker(commands.Cog):
         self.cmdr_json =        data_dir + '/CandidateCMDR.json'
         self.partner_json =     data_dir + '/PartnerCMDR.json'
         self.land_json =        data_dir + '/Lands.json'
+
+        # Thanks MTGJSON!
+        json_url = 'https://mtgjson.com/api/v5/AtomicCards.json'
+        req = requests.get(json_url, allow_redirects=True)
+        open(self.original_json, 'wb').write(req.content)        
 
         # Make some of the JSONs a bit easier to work with
         self.generateLegalJSON()
