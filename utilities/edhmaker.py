@@ -27,10 +27,14 @@ class EDHMaker(commands.Cog):
         self.partner_json =     data_dir + '/PartnerCMDR.json'
         self.land_json =        data_dir + '/Lands.json'
 
+        print("Downloading the MTGJSON AtomicCards.json file, this make take a moment...");
         # Thanks MTGJSON!
         json_url = 'https://mtgjson.com/api/v5/AtomicCards.json'
         req = requests.get(json_url, allow_redirects=True)
         open(self.original_json, 'wb').write(req.content)        
+
+        print("Done. Some partner jsons will be generated to make life easier to work with.")
+
 
         # Make some of the JSONs a bit easier to work with
         self.generateLegalJSON()
