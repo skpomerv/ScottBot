@@ -282,11 +282,22 @@ class EDHMaker(commands.Cog):
             finalDict[c] = innerMap
 
         # Mapping basic lands is only mostly trivial
+        randBasic = ""
         if len(legalColors) == 0:
             finalDict["Wastes"] = { "isCMDR":False, "count":basicMul }
-        for color in legalColors:
-            finalDict[colorToLand[color]] = { "isCMDR":False, "count":basicMul }
+            randBasic = "Wastes"
+        else:
+            randBasic = colorToLand[choice(legalColors)]
+            for color in legalColors:
+                finalDict[colorToLand[color]] = { "isCMDR":False, "count":basicMul }
 
+        # Sanity check, if we are missing a card or two, we can just add some basic lands.
+        # Some people reported this as an issue, but I am not able to recreate this yet...
+        rounding_err = 100 - sum(finalDict[k]["count"] for k in finalDict)
+        if rounding_err > 0:
+            print("Deck produced a list with a weird length? Repairing...")
+            print("CardCount is {}, Dict:\n{}".format(100-rounding_err, finalDict))
+            finalDict[randBasic]["count"] = basicMul + rounding_err
 
         return finalDict
 
@@ -303,8 +314,8 @@ class EDHMaker(commands.Cog):
 
 
     #Takes a commander name and returns the dictionary entry of the best match.
-    def findBestCMDRMatch(self, cmdrname):
-        return process.extractOne(cmdrname,self.getCommanderDict().keys())
+    def findBestCardMatch(self, cmdrname, cmdrDict):
+        return process.extractOne(cmdrname,cmdrDict.keys())
 
     # grabs all commanders of a given color identity then returns an commander or set
     # of commanders.
@@ -388,97 +399,9 @@ class EDHMaker(commands.Cog):
 
         return manaDict
 
-    # Recursively tries to see if it is possible to cast a card
-    def __isCardCastableDecision(self, cardMana, providedMana):
-        #print(" Testing case:\n  {}\n  {}\n  cml={}".format(cardMana, providedMana, len(cardMana.keys())))
-
-        if sum(cardMana.values()) > sum(providedMana.values()): #base case, for cards like reaper king
-        #    print("x cardMana < providedMana")
-            return False
-
-        if len(cardMana.keys()) == 1:
-            if cardMana['colorless'] <= sum(providedMana.values()):
-        #        print("colorless total is less than providedmana total")
-                return True
-            return False
-
-        #grab a random key from cardMana
-        ccombo = None
-        for k in cardMana:
-            if k != "colorless":
-                ccombo = k
-                break
-
-        ncm = cardMana.copy()
-        ncm[k] = ncm[k]-1
-        if ncm[k] <= 0:
-            ncm.pop(k)
-
-        for c in ccombo.split("/"):
-
-            if c.isnumeric():
-                ncm2 = ncm.copy() #gross, but rare
-                if 'colorless' in ncm2:
-                    ncm2['colorless'] = ncm2['colorless'] + int(c)
-                else:
-                    ncm2['colorless'] = int(c)
-                if self.__isCardCastableDecision(ncm2, providedMana):
-                    return True
-
-            elif c in providedMana:
-                npm = providedMana.copy()
-                npm[c] = npm[c] - 1 
-                if npm[c] <= 0:
-                    npm.pop(c)
-                if self.__isCardCastableDecision(ncm, npm):
-                    return True
-
-        #print("Fell through!")
-        return False
-
-
-    # Returns true if the card's mana cost is a subset of the provided mana cost. If providedMana is none, automatically return true.
-    def isCardCastable(self, cardMana, providedMana):
-
-        if (providedMana == None) or (len(cardMana) == 0):
-            return True
-
-        if sum(cardMana.values()) > sum(providedMana.values()):
-            return False
-
-        cMana = cardMana.copy()
-        pMana = providedMana.copy()
-
-        if "colorless" not in cMana.keys():
-            cMana['colorless'] = 0
-
-
-        keysToPop = []
-
-        # For the simple case of W B U R G
-        for k in cMana.keys():
-            # for the simple-case
-            if ("/" in k) or (k == "colorless"):
-                continue
-            if k in pMana:
-                pMana[k] = pMana[k] - cMana[k]
-                keysToPop.append(k)
-                if pMana[k] < 0:
-                    return False
-            else:
-                return False
-
-        for ktp in keysToPop:
-            cMana.pop(ktp)
-
-        #print("Entering Recursive Case:\n  cMana={}\n  pMana={}".format(cMana, pMana))
-            
-        return self.__isCardCastableDecision(cMana, pMana) 
-        
-
 
     # Gets a random card that is legal in commander based on restrictions.
-    def getRandomCard(self, color_restrictions=[], type_restrictions=[ 'Planeswalker', 'Creature', 'Sorcery', 'Instant', 'Artifact', 'Enchantment','Instant','Land' ], cmc_restriction=-1, cmcstrict=False, ccost=None):
+    def getRandomCard(self, color_restrictions=[], type_restrictions=[ 'Planeswalker', 'Creature', 'Sorcery', 'Instant', 'Artifact', 'Enchantment','Instant','Land' ], cmc_restriction=-1, cmcstrict=False):
         cardList = []
         cardDict = self.getLegalDict()
         
@@ -511,11 +434,6 @@ class EDHMaker(commands.Cog):
 
             if not addCardCMC:
                 continue
-
-            # Disabled due to being too costly
-            #if not (ccost == None):
-            #    if not self.isCardCastable( self.convertManaToDict(val[0]['manaCost'], False), ccost):
-            #        continue
 
             cardList.append((key,val))
        
@@ -586,8 +504,10 @@ class EDHMaker(commands.Cog):
         elif args[0].lower() == "help":
             myString =  """ Here is what I have so far:
 `!edh` - generates a random deck with a random commander and random colors.
-`!edh commander "Kozilek, the Great Distortion"` - generates a deck with Kozilek, the Great Distortion as the commander. The quotes are necessary.
-`!edh commander "Fblthp, the Lost" "Norin, the Wary"` - generates a deck with Fblthp and Norin as though they had partner. The quotes are necessary.
+`!edh card "Birds of Paradise" - Generates a deck with Birds of Paradise as the commander. The quotes are necessary. 'Card' searches for the closest legal nonland.
+`!edh card "Tamanoa" "Elvish Mystic" - Generates a deck with Tamanoa and Elvish Mystic as partner commanders. The quotes are necessary. 'Card' searches for the closest legal nonland.
+`!edh commander "Kozilek, the Great Distortion"` - generates a deck with Kozilek, the Great Distortion as the commander. This searches for the closest legal Commander.
+`!edh commander "Fblthp, the Lost" "Norin, the Wary"` - generates a deck with Fblthp and Norin as though they had partner. This searches for the closest legal Commander.
 `!edh colors red white blue` - generates a deck with a commander or pair of commanders that has the color identity of red, white, and blue.
 `!edh colors none` - generates a colorless edh deck.
                         """
@@ -601,13 +521,26 @@ class EDHMaker(commands.Cog):
                 return
             
             potential_cmdr_list = [] 
-            potential_cmdr_list.append(self.findBestCMDRMatch(args[1])[0])
+            potential_cmdr_list.append(self.findBestCardMatch(args[1], self.getCommanderDict())[0])
             if len(args) > 2:
-                potential_cmdr_list.append(self.findBestCMDRMatch(args[2])[0]) 
+                potential_cmdr_list.append(self.findBestCardMatch(args[2],self.getCommanderDict())[0]) 
                
             myString = self.dictToString(self.makeDeck(cmdrList=potential_cmdr_list))
             await ctx.send("Here's your deck with commander(s) {}:\n```{}```".format(potential_cmdr_list, myString))
             return
+        elif (args[0].lower() == "card"):
+            if len(args) < 2:
+                await ctx.send("No commander specified. Either call this with a card or do not add the forcecmdr arg.")
+                return
+            potential_cmdr_list = [] 
+            potential_cmdr_list.append(self.findBestCardMatch(args[1], self.getLegalDict())[0])
+            if len(args) > 2:
+                potential_cmdr_list.append(self.findBestCardMatch(args[2], self.getLegalDict())[0]) 
+               
+            myString = self.dictToString(self.makeDeck(cmdrList=potential_cmdr_list))
+            await ctx.send("Here's your deck with commander(s) {}:\n```{}```".format(potential_cmdr_list, myString))
+            return
+
         elif (args[0].lower() == "color") or (args[0].lower() == "colors"): 
 
             potential_cmdr_list = self.getCMDROnColor(self.tupleToColorID(args)) 
