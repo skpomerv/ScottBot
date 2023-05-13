@@ -504,10 +504,10 @@ class EDHMaker(commands.Cog):
         elif args[0].lower() == "help":
             myString =  """ Here is what I have so far:
 `!edh` - generates a random deck with a random commander and random colors.
-`!edh card "Birds of Paradise" - Generates a deck with Birds of Paradise as the commander. The quotes are necessary. 'Card' searches for the closest legal nonland.
-`!edh card "Tamanoa" "Elvish Mystic" - Generates a deck with Tamanoa and Elvish Mystic as partner commanders. The quotes are necessary. 'Card' searches for the closest legal nonland.
 `!edh commander "Kozilek, the Great Distortion"` - generates a deck with Kozilek, the Great Distortion as the commander. This searches for the closest legal Commander.
 `!edh commander "Fblthp, the Lost" "Norin, the Wary"` - generates a deck with Fblthp and Norin as though they had partner. This searches for the closest legal Commander.
+`!edh nonland "Birds of Paradise" - Generates a deck with Birds of Paradise as the commander. Can get the partner treatment if needed. The quotes are necessary. 'Card' searches for the closest legal nonland.
+`!edh land "Gaea's Cradle"` - The same as above, but for nonbasic lands. Can also get the same partner treatment.
 `!edh colors red white blue` - generates a deck with a commander or pair of commanders that has the color identity of red, white, and blue.
 `!edh colors none` - generates a colorless edh deck.
                         """
@@ -528,7 +528,8 @@ class EDHMaker(commands.Cog):
             myString = self.dictToString(self.makeDeck(cmdrList=potential_cmdr_list))
             await ctx.send("Here's your deck with commander(s) {}:\n```{}```".format(potential_cmdr_list, myString))
             return
-        elif (args[0].lower() == "card"):
+
+        elif (args[0].lower() == "nonland"):
             if len(args) < 2:
                 await ctx.send("No commander specified. Either call this with a card or do not add the forcecmdr arg.")
                 return
@@ -541,12 +542,26 @@ class EDHMaker(commands.Cog):
             await ctx.send("Here's your deck with commander(s) {}:\n```{}```".format(potential_cmdr_list, myString))
             return
 
+        elif (args[0].lower() == "land"):
+            if len(args) < 2:
+                await ctx.send("No commander specified. Either call this with a card or do not add the forcecmdr arg.")
+                return
+            potential_cmdr_list = [] 
+            potential_cmdr_list.append(self.findBestCardMatch(args[1], self.getLandDict())[0])
+            if len(args) > 2:
+                potential_cmdr_list.append(self.findBestCardMatch(args[2], self.getLandDict())[0]) 
+               
+            myString = self.dictToString(self.makeDeck(cmdrList=potential_cmdr_list))
+            await ctx.send("Here's your deck with commander(s) {}:\n```{}```".format(potential_cmdr_list, myString))
+            return
+
         elif (args[0].lower() == "color") or (args[0].lower() == "colors"): 
 
             potential_cmdr_list = self.getCMDROnColor(self.tupleToColorID(args)) 
             myString = self.dictToString(self.makeDeck(cmdrList=potential_cmdr_list))
             await ctx.send("Here's your deck with color selection {}:\n```{}```".format(self.tupleToColorID(args), myString))
             return
+
         else:
             await ctx.send("I'm not sure what you want? Make sure after !edh you type the type of restriction you're giving. Check with !edh help for current options.")
             return
