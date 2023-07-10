@@ -1,4 +1,4 @@
-#!/usr/bin/python3.9
+#!/usr/bin/python3
 
 # Requires the following pip installs
 # nextcord
@@ -19,6 +19,7 @@ from dotenv import load_dotenv
 from utilities.oscommands import OSCommands
 from utilities.gameslistutils import GamesListUtils
 from utilities.edhmaker import EDHMaker
+from utilities.hbrawlmaker import HBrawlMaker
 from utilities.kingdoms import Kingdoms
 from utilities.dungeonsanddorks import DungeonsAndDorks
 from utilities.cardmaker import CardMaker
@@ -43,6 +44,7 @@ def main():
     bot.add_cog(GamesListUtils(bot))
     bot.add_cog(OSCommands(bot))
     bot.add_cog(EDHMaker(bot, bot_dir+'/utilities/edhmaker_data' ))
+    bot.add_cog(HBrawlMaker(bot, bot_dir+'/utilities/hbrawlmaker_data' ))
     bot.add_cog(Kingdoms(bot, bot_dir+'/utilities/kingdoms_data'))
     bot.add_cog(DungeonsAndDorks(bot, GUILDS.split(",")))
     #bot.add_cog(CardMaker(bot, GUILDS.split(","),bot_dir+'/utilities/edhmaker_data',os.getenv('FAKE_CARD_DIR')))
