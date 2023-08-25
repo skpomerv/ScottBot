@@ -6,6 +6,7 @@ import json
 import re
 import requests
 #import collections
+from time import sleep
 from random import sample
 from random import choice
 from random import randint
@@ -27,20 +28,25 @@ class EDHMaker(commands.Cog):
         self.partner_json =     data_dir + '/PartnerCMDR.json'
         self.land_json =        data_dir + '/Lands.json'
 
-        print("Downloading the MTGJSON AtomicCards.json file, this make take a moment...");
-        # Thanks MTGJSON!
-        json_url = 'https://mtgjson.com/api/v5/AtomicCards.json'
-        req = requests.get(json_url, allow_redirects=True)
-        open(self.original_json, 'wb').write(req.content)        
+        if self.bot != None:
+            print("Downloading the MTGJSON AtomicCards.json file, this make take a moment...");
+            # Thanks MTGJSON!
+            json_url = 'https://mtgjson.com/api/v5/AtomicCards.json'
+            req = requests.get(json_url, allow_redirects=True)
+            open(self.original_json, 'wb').write(req.content)        
+    
+            print("Done. Some partner jsons will be generated to make life easier to work with.")
 
-        print("Done. Some partner jsons will be generated to make life easier to work with.")
-
-
-        # Make some of the JSONs a bit easier to work with
-        self.generateLegalJSON()
-        self.generateLandJSON()
-        self.generateCandidateCommanderJSON()
-        self.generatePartnersJSON()
+            # Make some of the JSONs a bit easier to work with
+            self.generateLegalJSON()
+            self.generateLandJSON()
+            self.generateCandidateCommanderJSON()
+            self.generatePartnersJSON()
+        else:
+            # For my api which globs onto this file, I don't want it to download again from scratch.
+            print("Waiting a bit for the jsons to get generated...")
+            sleep(2)
+            print("Done waiting.")
 
         
     ### Tools for Loading Dictionaries ###
