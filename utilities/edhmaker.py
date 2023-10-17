@@ -27,6 +27,7 @@ class EDHMaker(commands.Cog):
         self.cmdr_json =        data_dir + '/CandidateCMDR.json'
         self.partner_json =     data_dir + '/PartnerCMDR.json'
         self.land_json =        data_dir + '/Lands.json'
+        self.purchase_json =    data_dir + '/Purchase.json'
 
         if self.bot != None:
             print("Downloading the MTGJSON AtomicCards.json file, this make take a moment...");
@@ -42,6 +43,7 @@ class EDHMaker(commands.Cog):
             self.generateLandJSON()
             self.generateCandidateCommanderJSON()
             self.generatePartnersJSON()
+            self.generatePurchaseJSON()
         else:
             # For my api which globs onto this file, I don't want it to download again from scratch.
             print("Waiting a bit for the jsons to get generated...")
@@ -81,6 +83,12 @@ class EDHMaker(commands.Cog):
             cardDict = json.load(json_file)
         return cardDict
 
+    def getPurchaseDict(self):
+        cardDict = None
+        with open(self.purchase_json) as json_file:
+            cardDict = json.load(json_file)
+        return cardDict         
+
     ### JSON Generators ###
 
     # Makes a json of all known legal nonland cards.
@@ -90,7 +98,7 @@ class EDHMaker(commands.Cog):
 
         for key, val in cardDict.items():
             if (('legalities' in val[0]) and ('types' in val[0])):
-                if (('commander' in val[0]["legalities"]) & ('Land' not in val[0]['types'])) :
+                if (('commander' in val[0]["legalities"]) & ('Land' not in val[0]['types']) & ('Stickers' not in val[0]['types']) ) :
                     if (val[0]["legalities"]["commander"] != "Banned"):
                         if ('text' in val[0]) and ("draft" in val[0]['text']):
                             continue
@@ -108,7 +116,7 @@ class EDHMaker(commands.Cog):
 
         for key, val in cardDict.items():
             if (('legalities' in val[0]) and ('types' in val[0])):
-                if (('commander' in val[0]["legalities"]) & ('Land' in val[0]['types'])) :
+                if (('commander' in val[0]["legalities"]) & ('Land' in val[0]['types']) & ('Stickers' not in val[0]['types'])) :
                     if (val[0]["legalities"]["commander"] != "Banned"):
                         if ('text' in val[0]) and ("draft" in val[0]['text']):
                             continue
@@ -130,7 +138,7 @@ class EDHMaker(commands.Cog):
 
             # If it's a legendary creature, it can be a commander
             if (('supertypes' in val[0]) & ('types' in val[0])): # I don't trust python short circuiting
-                if (('Legendary' in val[0]['supertypes']) & ('Creature' in val[0]['types'])):
+                if (('Legendary' in val[0]['supertypes']) & ('Creature' in val[0]['types']) & ('Stickers' not in val[0]['types']) ):
                     if ('text' in val[0]) and ("draft" in val[0]['text']): #okay maybe I do
                         continue
                     myDict[key] = val 
@@ -163,6 +171,20 @@ class EDHMaker(commands.Cog):
         json.dump(myDict, f)
         f.close()
 
+    def generatePurchaseJSON(self):
+        myDict = {}
+        cardDict = self.getDict()
+
+        for key, val in cardDict.items():
+            myDict[key] = ""
+            if (("purchaseUrls" in val[0])):
+                if (("tcgplayer" in val[0]["purchaseUrls"])):
+                    myDict[key] = val[0]["purchaseUrls"]["tcgplayer"]
+
+
+        f = open(self.purchase_json, "w")
+        json.dump(myDict, f)
+        f.close()
 
     ### Deck Generators ###
 
@@ -231,7 +253,7 @@ class EDHMaker(commands.Cog):
 
     # Generates a (probably) terrible EDH deck
     # At the moment there are no color restriction options
-    # Returns a map that maps keys (cardnames) to a small dict of ['isCMDR', and 'count']
+    # Returns a map that maps keys (cardnames) to a small dict of ['isCMDR', 'count', 'tcgplayer']. The last is used for the api.
     def makeDeck(self, cmdrList=[]):
         colorToLand = { "W":"Plains", "B":"Swamp", "U":"Island", "G":"Forest", "R":"Mountain" }
         deckList = []
@@ -280,22 +302,22 @@ class EDHMaker(commands.Cog):
         # The reason I use an inner dict as opposed to a list is for understandability, not speed.
         finalDict = {}
         for c in cmdrList:
-            innerMap = { "isCMDR":True, "count":1 }
+            innerMap = { "isCMDR":True, "count":1, "tcgplayer":"" }
             finalDict[c] = innerMap
 
         for c in deckList:
-            innerMap = {"isCMDR":False, "count":1 }
+            innerMap = {"isCMDR":False, "count":1, "tcgplayer":"" }
             finalDict[c] = innerMap
 
         # Mapping basic lands is only mostly trivial
         randBasic = ""
         if len(legalColors) == 0:
-            finalDict["Wastes"] = { "isCMDR":False, "count":basicMul }
+            finalDict["Wastes"] = { "isCMDR":False, "count":basicMul, "tcgplayer":"" }
             randBasic = "Wastes"
         else:
             randBasic = colorToLand[choice(legalColors)]
             for color in legalColors:
-                finalDict[colorToLand[color]] = { "isCMDR":False, "count":basicMul }
+                finalDict[colorToLand[color]] = { "isCMDR":False, "count":basicMul, "tcgplayer":"" }
 
         # Sanity check, if we are missing a card or two, we can just add some basic lands.
         # Some people reported this as an issue, but I am not able to recreate this yet...
@@ -304,6 +326,12 @@ class EDHMaker(commands.Cog):
             print("Deck produced a list with a weird length? Repairing...")
             print("CardCount is {}, Dict:\n{}".format(100-rounding_err, finalDict))
             finalDict[randBasic]["count"] = basicMul + rounding_err
+
+        # Gonna append urls here.
+        urls = self.getPurchaseDict()
+        for key in finalDict:
+            #print("{} url: {}".format(key, urls[key]))
+            finalDict[key]["tcgplayer"] = urls[key];
 
         return finalDict
 

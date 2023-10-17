@@ -30,7 +30,6 @@ def makeColorDeck(colors):
 @app.route("/edh/commander/<commander1>")
 def makeDeck1Commander(commander1):
     cmdrs = []
-    #sc1 = urllib.parse.unquote(commander1) 
     cmdrs.append(deckgen.findBestCardMatch(commander1, deckgen.getLegalDict())[0])
     response = jsonify(deckgen.makeDeck(cmdrList=cmdrs))
     response.headers.add("Access-Control-Allow-Origin", "*")
@@ -39,8 +38,6 @@ def makeDeck1Commander(commander1):
 @app.route("/edh/commander/<commander1>/<commander2>")
 def makeDeck2Commanders(commander1, commander2):
     cmdrs = []
-    #sc1 = urllib.parse.unquote(commander1)
-    #sc2 = urllib.parse.unquote(commander2)
     cmdrs.append(deckgen.findBestCardMatch(commander1, deckgen.getLegalDict())[0])
     cmdrs.append(deckgen.findBestCardMatch(commander2, deckgen.getLegalDict())[0])
     response = jsonify(deckgen.makeDeck(cmdrList=cmdrs))
