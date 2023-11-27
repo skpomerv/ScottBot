@@ -22,7 +22,7 @@ class OSCommands(commands.Cog):
     # Runs the fortune command
     @commands.command(brief='Generates a random fortune!', description='Generates a random fortune using the linux command "fortune" and posts it for all to see.')
     async def fortune(self, ctx):
-        proc = subprocess.Popen(["/usr/games/fortune"], stdout=subprocess.PIPE, shell=True)
+        proc = subprocess.Popen(["/usr/games/fortune"], stdout=subprocess.PIPE)
         (out, err) = proc.communicate()
         await ctx.send("```" + out.decode('utf-8') + "```")
 
