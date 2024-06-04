@@ -23,6 +23,7 @@ from utilities.hbrawlmaker import HBrawlMaker
 from utilities.kingdoms import Kingdoms
 from utilities.dungeonsanddorks import DungeonsAndDorks
 from utilities.cardmaker import CardMaker
+from utilities.pokedex import Pokedex
 
 def main():
     #get file directory
@@ -46,6 +47,7 @@ def main():
     bot.add_cog(EDHMaker(bot, bot_dir+'/utilities/edhmaker_data' ))
     bot.add_cog(HBrawlMaker(bot, bot_dir+'/utilities/hbrawlmaker_data' ))
     bot.add_cog(Kingdoms(bot, bot_dir+'/utilities/kingdoms_data'))
+    bot.add_cog(Pokedex(bot, bot_dir+'/utilities/pokedex_data'))
     bot.add_cog(DungeonsAndDorks(bot, GUILDS.split(",")))
     #bot.add_cog(CardMaker(bot, GUILDS.split(","),bot_dir+'/utilities/edhmaker_data',os.getenv('FAKE_CARD_DIR')))
 
