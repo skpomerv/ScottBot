@@ -98,7 +98,7 @@ class EDHMaker(commands.Cog):
 
         for key, val in cardDict.items():
             if (('legalities' in val[0]) and ('types' in val[0])):
-                if (('commander' in val[0]["legalities"]) & ('Land' not in val[0]['types']) & ('Stickers' not in val[0]['types']) ) :
+                if (('commander' in val[0]["legalities"]) & ('Land' not in val[0]['types']) & ('Stickers' not in val[0]['types']) & ('Attraction' not in val[0]['types']) & ('Contraption' not in val[0]['types'])):
                     if (val[0]["legalities"]["commander"] != "Banned"):
                         if ('text' in val[0]) and ("draft" in val[0]['text']):
                             continue
@@ -116,7 +116,7 @@ class EDHMaker(commands.Cog):
 
         for key, val in cardDict.items():
             if (('legalities' in val[0]) and ('types' in val[0])):
-                if (('commander' in val[0]["legalities"]) & ('Land' in val[0]['types']) & ('Stickers' not in val[0]['types'])) :
+                if (('commander' in val[0]["legalities"]) & ('Land' in val[0]['types']) & ('Stickers' not in val[0]['types']) & ('Attraction' not in val[0]['types']) & ('Contraption' not in val[0]['types'])):
                     if (val[0]["legalities"]["commander"] != "Banned"):
                         if ('text' in val[0]) and ("draft" in val[0]['text']):
                             continue
@@ -138,7 +138,7 @@ class EDHMaker(commands.Cog):
 
             # If it's a legendary creature, it can be a commander
             if (('supertypes' in val[0]) & ('types' in val[0])): # I don't trust python short circuiting
-                if (('Legendary' in val[0]['supertypes']) & ('Creature' in val[0]['types']) & ('Stickers' not in val[0]['types']) ):
+                if (('Legendary' in val[0]['supertypes']) & ('Creature' in val[0]['types']) & ('Stickers' not in val[0]['types']) & ('Attraction' not in val[0]['types']) & ('Contraption' not in val[0]['types']) ):
                     if ('text' in val[0]) and ("draft" in val[0]['text']): #okay maybe I do
                         continue
                     myDict[key] = val 
@@ -263,7 +263,7 @@ class EDHMaker(commands.Cog):
             # get commander
             cmdrList = self.getXRandomCardsFromDict([], [], 1, 'commander')
             if self.isPartner(cmdrList[0]):
-                cmdrList.append(self.getXRandomCardsFromDict([], [], 1, 'partner')[0])
+                cmdrList.append(self.getXRandomCardsFromDict([], cmdrList, 1, 'partner')[0])
 
         landCount = randint(33,42)
         basicLandCount = int(landCount * .66)
