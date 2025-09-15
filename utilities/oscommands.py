@@ -1,12 +1,16 @@
 import subprocess
 from nextcord.ext import commands
 from nextcord.ext.commands import Bot
+from random import choice
 
 # Runs some trivial simple commands and spits out results
 class OSCommands(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot, data_dir):
         super().__init__()
         self.bot = bot
+        
+        with open(data_dir+"words.txt") as wordfile:
+            self.words_dict = wordfile.readlines()
 
     def shift(self, inp, shamt):
         res = ""
@@ -40,4 +44,9 @@ class OSCommands(commands.Cog):
 
         rstring = rstring + "```"
         await ctx.send(rstring)
+
+    @commands.command(brief='Inserts a random word into the string "Holy _, Batman!"', description='Inserts a random word into the string "Holy _, Batman!"')
+    async def robin(self, ctx):
+        await ctx.send(f"Holy {choice(self.words_dict).strip()}, Batman!")
+        return          
 

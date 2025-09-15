@@ -43,9 +43,9 @@ def main():
     
     #Enable cogs
     bot.add_cog(GamesListUtils(bot))
-    bot.add_cog(OSCommands(bot))
-    bot.add_cog(EDHMaker(bot, bot_dir+'/utilities/edhmaker_data' ))
-    bot.add_cog(HBrawlMaker(bot, bot_dir+'/utilities/hbrawlmaker_data' ))
+    bot.add_cog(OSCommands(bot, bot_dir+'/utilities/oscommands_data/'))
+    bot.add_cog(EDHMaker(bot, bot_dir+'/utilities/edhmaker_data'))
+    bot.add_cog(HBrawlMaker(bot, bot_dir+'/utilities/hbrawlmaker_data'))
     bot.add_cog(Kingdoms(bot, bot_dir+'/utilities/kingdoms_data'))
     bot.add_cog(Pokedex(bot, bot_dir+'/utilities/pokedex_data'))
     bot.add_cog(DungeonsAndDorks(bot, GUILDS.split(",")))
