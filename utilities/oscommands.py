@@ -95,7 +95,7 @@ class OSCommands(commands.Cog):
     async def addquote(self, ctx, *args):
         quote = " ".join(args)
         nqn = self.add_quote(ctx.guild.id, quote)
-        await ctx.send("Added the quote (#{nqn})!") 
+        await ctx.send(f"Added the quote (#{nqn})!") 
 
 
     @commands.command(brief='Returns a random quote (or quote with specific number)', description='Says a random quote!')
