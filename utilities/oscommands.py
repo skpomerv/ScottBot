@@ -91,10 +91,27 @@ class OSCommands(commands.Cog):
         await ctx.send(f"Holy {choice(self.words_dict).strip()}, Batman!")
         return          
 
-    @commands.command(brief='Adds a random quote to the quote pool.', description='Inserts a quote into the pool of random quotes. Make sure to credit the source!')
-    async def addquote(self, ctx, *args):
+    @commands.command(brief='Adds a quote to the quote pool.', description='Inserts a quote into the pool of random quotes. Make sure to credit the source! If it is a reply, the quote will add the content of the replied-to message to the quote pool and give attribution to the person who wrote that text.')
+    async def addquote(self, ctx, *args):       
         quote = " ".join(args)
+
+        if ctx.message.reference is not None:
+            if ctx.message.reference.resolved is None:
+                await ctx.send("Could not resolve the attached message. This is a Discord issue! Sorry! :(")
+                return
+            if ctx.message.reference.resolved.author.bot:
+                await ctx.send("Cannot add bot quotes, sorry!")
+                return
+            
+            quote = f"{ctx.message.reference.resolved.content} ~{ctx.message.reference.resolved.author.display_name}" 
+            await ctx.send(f"Adding: {quote}")
+
+        elif len(args) == 0:
+            await ctx.send("Message must have the quote in it, or must be a reply to another message!")
+            return
+
         nqn = self.add_quote(ctx.guild.id, quote)
+        
         await ctx.send(f"Added the quote (#{nqn})!") 
 
 
